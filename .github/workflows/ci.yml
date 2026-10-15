@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  analyze-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter pub publish --dry-run
+
+  podspec-lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CocoaPods lint
+        run: |
+          pod lib lint ios/apple_maps_flutter_plus.podspec --configuration=Debug --skip-tests --use-modular-headers --use-libraries
