@@ -18,10 +18,50 @@ jobs:
       - run: flutter test
       - run: flutter pub publish --dry-run
 
-  podspec-lint:
+  ios:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: CocoaPods lint
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+      - run: flutter pub get
+      # SPM proof: compiles the Swift package via Swift Package Manager.
+      # Debug (single-arch) avoids the rare release multi-arch lipo path.
+      - run: flutter build ios --simulator --debug --no-codesign
+        working-directory: example
+      # CocoaPods proof: trunk only hosts ancient Flutter podspecs
+      # (iOS 11, uninstallable on modern Xcode), so lint against a local
+      # mirror built from this SDK's engine. --allow-warnings covers the
+      # standard `:path` source warning every Flutter plugin podspec has.
+      - name: pod lib lint (CocoaPods fallback)
         run: |
-          pod lib lint ios/apple_maps_flutter_plus.podspec --configuration=Debug --skip-tests --use-modular-headers --use-libraries
+          set -eux
+          FLUTTER_ROOT="$(dirname "$(dirname "$(which flutter)")")"
+          ENGINE="$FLUTTER_ROOT/bin/cache/artifacts/engine/ios/Flutter.xcframework"
+          test -d "$ENGINE"
+          MIRROR="$RUNNER_TEMP/lint-pods"
+          mkdir -p "$MIRROR"
+          ditto -c -k --sequesterRsrc --keepParent "$ENGINE" "$MIRROR/Flutter.xcframework.zip"
+          SPEC_REPO="$RUNNER_TEMP/local-specs/Specs/Flutter/3.44.0"
+          mkdir -p "$SPEC_REPO"
+          cat > "$SPEC_REPO/Flutter.podspec.json" <<EOF
+          {
+            "name": "Flutter",
+            "version": "3.44.0",
+            "summary": "Flutter engine framework (local CI mirror for linting).",
+            "homepage": "https://flutter.dev",
+            "license": { "type": "BSD" },
+            "authors": { "Flutter Dev Team": "flutter-dev@googlegroups.com" },
+            "source": { "http": "file://$MIRROR/Flutter.xcframework.zip" },
+            "platforms": { "ios": "15.0" },
+            "vendored_frameworks": "Flutter.xcframework"
+          }
+          EOF
+          cd "$RUNNER_TEMP/local-specs" && git init -q && git add -A && git -c user.name=ci -c user.email=ci@ci commit -qm init
+          pod repo add local-flutter "$RUNNER_TEMP/local-specs"
+          pod lib lint ios/apple_maps_flutter_plus.podspec \
+            --sources=local-flutter \
+            --configuration=Debug --skip-tests \
+            --use-modular-headers --use-libraries --allow-warnings

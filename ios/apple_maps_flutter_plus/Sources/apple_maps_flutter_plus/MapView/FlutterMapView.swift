@@ -5,6 +5,7 @@
 //  Created by Luis Thein on 09.10.19.
 //
 
+import Flutter
 import Foundation
 import MapKit
 import CoreLocation
@@ -204,7 +205,8 @@ class FlutterMapView: MKMapView, UIGestureRecognizerDelegate {
     }
     
     func setUserLocation() {
-        let authorizationStatus = CLLocationManager.authorizationStatus()
+        // iOS 14+: use the instance property (the class func is deprecated).
+        let authorizationStatus = locationManager.authorizationStatus
         
         switch authorizationStatus {
         case .notDetermined:

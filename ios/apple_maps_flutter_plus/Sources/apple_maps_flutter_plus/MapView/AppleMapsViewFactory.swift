@@ -5,6 +5,7 @@
 //  Created by Luis Thein on 01.07.21.
 //
 
+import Flutter
 import Foundation
 
 public class AppleMapViewFactory: NSObject, FlutterPlatformViewFactory {

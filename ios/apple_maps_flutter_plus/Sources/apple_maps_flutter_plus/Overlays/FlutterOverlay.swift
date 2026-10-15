@@ -5,6 +5,7 @@
 //  Created by Luis Thein on 13.02.22.
 //
 
+import Flutter
 import Foundation
 import MapKit
 

@@ -5,6 +5,7 @@
 //  Created by Luis Thein on 03.09.19.
 //
 
+import Flutter
 import Foundation
 import MapKit
 
@@ -313,7 +314,14 @@ extension AppleMapController {
         snapShotOptions.size = self.mapView.frame.size
         snapShotOptions.scale = UIScreen.main.scale
         snapShotOptions.showsBuildings = options.showBuildings
-        snapShotOptions.showsPointsOfInterest = options.showPointsOfInterest
+        if #available(iOS 17.0, *) {
+            let configuration = MKStandardMapConfiguration()
+            configuration.pointOfInterestFilter = options.showPointsOfInterest ? MKPointOfInterestFilter.includingAll : MKPointOfInterestFilter.excludingAll
+            snapShotOptions.preferredConfiguration = configuration
+        } else {
+            // iOS 15 fallback (deprecated in iOS 13 but still functional).
+            snapShotOptions.showsPointsOfInterest = options.showPointsOfInterest
+        }
         
         // Set MKMapSnapShotOptions to MKMapSnapShotter.
         snapShot = MKMapSnapshotter(options: snapShotOptions)

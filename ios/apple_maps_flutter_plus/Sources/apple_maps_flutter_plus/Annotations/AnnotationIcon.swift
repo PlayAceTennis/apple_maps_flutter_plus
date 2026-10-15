@@ -5,6 +5,7 @@
 //  Created by Luis Thein on 07.03.20.
 //
 
+import Flutter
 import Foundation
 
 enum IconType {

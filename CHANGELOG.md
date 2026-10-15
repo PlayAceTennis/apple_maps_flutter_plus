@@ -5,6 +5,10 @@
 * Maintained fork by Ace Labs UG (haftungsbeschränkt) / PlayAceTennis, renamed to `apple_maps_flutter_plus`
 * Added Swift Package Manager support (`ios/apple_maps_flutter_plus/Package.swift`), kept CocoaPods fallback
 * iOS deployment target 15.0, Swift 5.9
+* Pure-Swift plugin (removed ObjC shim; mixed ObjC+Swift is unsupported in SPM)
+* Added missing `import Flutter` to all Swift files (required outside CocoaPods)
+* Replaced deprecated `authorizationStatus()` and snapshot `showsPointsOfInterest` (iOS 17 `preferredConfiguration`, iOS 15 fallback)
+* Example app is SPM-only (CocoaPods deintegrated)
 * Dart `>=3.0 <4.0`, Flutter `>=3.24`
 * Fixed `Color.value` → `toARGB32`, `==` parameter types, `Annotation.zIndex` final
 * No API changes; drop-in migration via import rename
