@@ -61,6 +61,7 @@ jobs:
           EOF
           cd "$RUNNER_TEMP/local-specs" && git init -q && git add -A && git -c user.name=ci -c user.email=ci@ci commit -qm init
           pod repo add local-flutter "$RUNNER_TEMP/local-specs"
+          cd "$GITHUB_WORKSPACE"
           pod lib lint ios/apple_maps_flutter_plus.podspec \
             --sources=local-flutter \
             --configuration=Debug --skip-tests \
