@@ -85,8 +85,8 @@ void main() {
     expect(addedAnnotation, equals(m2));
     expect(platformAppleMap.annotationIdsToRemove!.isEmpty, true);
 
-    expect(platformAppleMap.annotationsToChange!.length, 1);
-    expect(platformAppleMap.annotationsToChange!.first, equals(m1));
+    // Unchanged annotations (m1) are not re-sent across the channel.
+    expect(platformAppleMap.annotationsToChange!.isEmpty, true);
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -229,4 +229,61 @@ void main() {
     },
     skip: true,
   );
+
+  testWidgets("Unchanged annotations are not re-sent", (WidgetTester tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    final Set<Annotation> prev = _toSet(
+      m1: Annotation(annotationId: AnnotationId("annotation_1")),
+    );
+    // Same content, new instances: nothing should cross the channel.
+    final Set<Annotation> cur = _toSet(
+      m1: Annotation(annotationId: AnnotationId("annotation_1")),
+    );
+
+    await tester.pumpWidget(_mapWithAnnotations(prev));
+    await tester.pumpWidget(_mapWithAnnotations(cur));
+
+    final FakePlatformAppleMap platformAppleMap =
+        fakePlatformViewsController.lastCreatedView!;
+
+    expect(platformAppleMap.annotationsToChange!.isEmpty, true);
+    expect(platformAppleMap.annotationsToAdd!.isEmpty, true);
+    expect(platformAppleMap.annotationIdsToRemove!.isEmpty, true);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  test('Clustering identifier participates in equality and copyWith', () {
+    final Annotation base = Annotation(annotationId: AnnotationId('a1'));
+    expect(base.clusteringIdentifier, isNull);
+
+    final Annotation clustered = base.copyWith(
+      clusteringIdentifierParam: 'cluster-1',
+    );
+    expect(clustered.clusteringIdentifier, 'cluster-1');
+    expect(clustered == base, false);
+    expect(
+      clustered,
+      Annotation(
+        annotationId: AnnotationId('a1'),
+        clusteringIdentifier: 'cluster-1',
+      ),
+    );
+  });
+
+  test('SnapshotOptions carries mapType through serialization', () {
+    const SnapshotOptions options = SnapshotOptions(
+      mapType: MapType.hybridFlyover,
+    );
+    expect(options.mapType, MapType.hybridFlyover);
+    expect(
+      SnapshotOptions.fromMap(<String, dynamic>{
+        'showBuildings': true,
+        'showPointsOfInterest': true,
+        'showAnnotations': true,
+        'showOverlays': true,
+        'mapType': MapType.hybridFlyover.index,
+      })?.mapType,
+      MapType.hybridFlyover,
+    );
+  });
 }

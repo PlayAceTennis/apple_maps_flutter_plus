@@ -38,6 +38,17 @@ import 'package:apple_maps_flutter_plus/apple_maps_flutter_plus.dart';
 AppleMap(
   onMapCreated: (c) => mapController = c,
   initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+  colorScheme: MapColorScheme.system, // or .light / .dark
+)
+```
+
+Native clustering (iOS 11+):
+
+```dart
+Annotation(
+  annotationId: AnnotationId('a'),
+  position: const LatLng(0, 0),
+  clusteringIdentifier: 'pois', // same id -> clustered natively
 )
 ```
 

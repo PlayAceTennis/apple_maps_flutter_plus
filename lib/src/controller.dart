@@ -238,6 +238,18 @@ class AppleMapController {
     return Offset(doubles.first, doubles.last);
   }
 
+  /// Returns the geographic location that corresponds to a screen location.
+  /// The screen location is in screen pixels (not display pixels) with respect
+  /// to the top left corner of the map, not necessarily of the whole screen.
+  Future<LatLng?> getLatLng(Offset screenPoint) async {
+    final List<dynamic>? latLng =
+        await channel.invokeMethod<List<dynamic>>('map#getLatLng', <String, dynamic>{
+      'x': screenPoint.dx,
+      'y': screenPoint.dy,
+    });
+    return LatLng._fromJson(latLng);
+  }
+
   /// Returns the image bytes of the map
   Future<Uint8List?> takeSnapshot(
       [SnapshotOptions snapshotOptions = const SnapshotOptions()]) {

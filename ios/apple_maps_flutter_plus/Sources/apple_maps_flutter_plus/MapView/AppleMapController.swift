@@ -59,8 +59,13 @@ public class AppleMapController: NSObject, FlutterPlatformView {
         return contentView
     }
     
+    deinit {
+        channel.setMethodCallHandler(nil)
+    }
+
     private func setMethodCallHandlers() {
-        channel.setMethodCallHandler({ [unowned self] (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+        channel.setMethodCallHandler({ [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            guard let self = self else { return }
             if let args: Dictionary<String, Any> = call.arguments as? Dictionary<String,Any> {
                 switch(call.method) {
                 case "annotations#update":
@@ -101,6 +106,9 @@ public class AppleMapController: NSObject, FlutterPlatformView {
                     break
                 case "camera#convert":
                     self.cameraConvert(args: args, result: result)
+                    break
+                case "map#getLatLng":
+                    self.getLatLng(args: args, result: result)
                     break
                 case "map#takeSnapshot":
                     self.takeSnapshot(options: SnapshotOptions.init(options: args), onCompletion: { (snapshot: FlutterStandardTypedData?, error: Error?) -> Void in
@@ -209,22 +217,49 @@ public class AppleMapController: NSObject, FlutterPlatformView {
         let positionData: Dictionary<String, Any> = self.toPositionData(data: args["cameraUpdate"] as! Array<Any>, animated: true)
         if !positionData.isEmpty {
             guard let _ = positionData["moveToBounds"] else {
+                if self.applyScrollBy(positionData: positionData, animated: false) {
+                    return
+                }
                 self.mapView.setCenterCoordinate(positionData, animated: false)
                 return
             }
             self.mapView.setBounds(positionData, animated: false)
         }
     }
-    
+
     private func animateCamera(args: Dictionary<String, Any>) -> Void {
         let positionData: Dictionary<String, Any> = self.toPositionData(data: args["cameraUpdate"] as! Array<Any>, animated: true)
         if !positionData.isEmpty {
             guard let _ = positionData["moveToBounds"] else {
+                if self.applyScrollBy(positionData: positionData, animated: true) {
+                    return
+                }
                 self.mapView.setCenterCoordinate(positionData, animated: true)
                 return
             }
             self.mapView.setBounds(positionData, animated: true)
         }
+    }
+
+    /// Applies a pixel scroll (`scrollBy` camera update) and returns true when
+    /// handled, preserving the current zoom, pitch and heading.
+    private func applyScrollBy(positionData: Dictionary<String, Any>, animated: Bool) -> Bool {
+        guard let scroll = positionData["scrollBy"] as? Array<Double>, scroll.count >= 2 else {
+            return false
+        }
+        let point = self.mapView.convert(self.mapView.centerCoordinate, toPointTo: self.view())
+        let moved = self.mapView.convert(
+            CGPoint(x: point.x + CGFloat(scroll[0]), y: point.y + CGFloat(scroll[1])),
+            toCoordinateFrom: self.view()
+        )
+        var scrolled = positionData
+        scrolled["target"] = [moved.latitude, moved.longitude]
+        scrolled["zoom"] = self.mapView.calculatedZoomLevel
+        scrolled["pitch"] = self.mapView.camera.pitch
+        scrolled["heading"] = self.mapView.camera.heading
+        scrolled.removeValue(forKey: "scrollBy")
+        self.mapView.setCenterCoordinate(scrolled, animated: animated)
+        return true
     }
     
     private func cameraConvert(args: Dictionary<String, Any>, result: FlutterResult) -> Void {
@@ -234,6 +269,15 @@ public class AppleMapController: NSObject, FlutterPlatformView {
         }
         let point = self.mapView.convert(CLLocationCoordinate2D(latitude: annotation[0] , longitude: annotation[1]), toPointTo: self.view())
         result(["point": [point.x, point.y]])
+    }
+
+    private func getLatLng(args: Dictionary<String, Any>, result: FlutterResult) -> Void {
+        guard let x = args["x"] as? Double, let y = args["y"] as? Double else {
+            result(nil)
+            return
+        }
+        let coordinate = self.mapView.convert(CGPoint(x: x, y: y), toCoordinateFrom: self.view())
+        result([coordinate.latitude, coordinate.longitude])
     }
     
     private func toPositionData(data: Array<Any>, animated: Bool) -> Dictionary<String, Any> {
@@ -261,6 +305,10 @@ public class AppleMapController: NSObject, FlutterPlatformView {
             case "zoomBy":
                 if let zoomBy: Double = data[1] as? Double {
                     mapView.zoomBy(zoomBy: zoomBy, animated: animated)
+                }
+            case "scrollBy":
+                if let dx = data[1] as? Double, let dy = data[2] as? Double {
+                    positionData = ["scrollBy": [dx, dy]]
                 }
             case "zoomTo":
                 if let zoomTo: Double = data[1] as? Double {
@@ -314,6 +362,10 @@ extension AppleMapController {
         snapShotOptions.size = self.mapView.frame.size
         snapShotOptions.scale = UIScreen.main.scale
         snapShotOptions.showsBuildings = options.showBuildings
+        let snapshotMapTypes: [MKMapType] = [.standard, .satellite, .hybrid, .satelliteFlyover, .hybridFlyover, .mutedStandard]
+        if options.mapType >= 0 && options.mapType < snapshotMapTypes.count {
+            snapShotOptions.mapType = snapshotMapTypes[options.mapType]
+        }
         if #available(iOS 17.0, *) {
             let configuration = MKStandardMapConfiguration()
             configuration.pointOfInterestFilter = options.showPointsOfInterest ? MKPointOfInterestFilter.includingAll : MKPointOfInterestFilter.excludingAll

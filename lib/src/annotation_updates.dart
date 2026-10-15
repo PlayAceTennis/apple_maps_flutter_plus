@@ -40,9 +40,14 @@ class _AnnotationUpdates {
         .map(idToCurrentAnnotation)
         .toSet();
 
+    // Only include annotations whose content actually changed. Otherwise every
+    // annotation present in both sets would be re-serialized across the
+    // platform channel on every diff.
     final Set<Annotation> _annotationsToChange = currentAnnotationIds
         .intersection(prevAnnotationIds)
         .map(idToCurrentAnnotation)
+        .where((Annotation current) =>
+            current != previousAnnotations[current.annotationId])
         .toSet();
 
     annotationsToAdd = _annotationsToAdd;

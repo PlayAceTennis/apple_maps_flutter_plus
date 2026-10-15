@@ -155,6 +155,12 @@ class CameraUpdate {
     return CameraUpdate._(<dynamic>['zoomTo', zoom]);
   }
 
+  /// Returns a camera update that scrolls the camera by the specified amount
+  /// of pixels (not display pixels).
+  static CameraUpdate scrollBy(double dx, double dy) {
+    return CameraUpdate._(<dynamic>['scrollBy', dx, dy]);
+  }
+
   final dynamic _json;
 
   dynamic _toJson() => _json;

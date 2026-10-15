@@ -8,21 +8,49 @@
 import Foundation
 import UIKit
 import MapKit
+import ObjectiveC
+
+private struct MapViewZoomKeys {
+    static var zoomLevel: UInt8 = 0
+    static var pitch: UInt8 = 0
+    static var heading: UInt8 = 0
+    static var maxZoomLevel: UInt8 = 0
+    static var minZoomLevel: UInt8 = 0
+}
 
 public extension MKMapView {
-    // keeps track of the Map values
-    private struct Holder {
-        static var _zoomLevel: Double = Double(0)
-        static var _pitch: CGFloat = CGFloat(0)
-        static var _heading: CLLocationDirection = CLLocationDirection(0)
-        static var _maxZoomLevel: Double = Double(21)
-        static var _minZoomLevel: Double = Double(2)
+    // Per-map-instance camera state (associated objects).
+    // Previously these were static `Holder` vars shared by ALL map views,
+    // so using multiple maps on one screen made them interfere (#44).
+    private var storedZoomLevel: Double {
+        get { (objc_getAssociatedObject(self, &MapViewZoomKeys.zoomLevel) as? Double) ?? 0 }
+        set { objc_setAssociatedObject(self, &MapViewZoomKeys.zoomLevel, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
-    
+
+    private var storedPitch: CGFloat {
+        get { (objc_getAssociatedObject(self, &MapViewZoomKeys.pitch) as? CGFloat) ?? 0 }
+        set { objc_setAssociatedObject(self, &MapViewZoomKeys.pitch, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
+    private var storedHeading: CLLocationDirection {
+        get { (objc_getAssociatedObject(self, &MapViewZoomKeys.heading) as? CLLocationDirection) ?? 0 }
+        set { objc_setAssociatedObject(self, &MapViewZoomKeys.heading, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
+    private var storedMaxZoomLevel: Double {
+        get { (objc_getAssociatedObject(self, &MapViewZoomKeys.maxZoomLevel) as? Double) ?? 21 }
+        set { objc_setAssociatedObject(self, &MapViewZoomKeys.maxZoomLevel, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
+    private var storedMinZoomLevel: Double {
+        get { (objc_getAssociatedObject(self, &MapViewZoomKeys.minZoomLevel) as? Double) ?? 2 }
+        set { objc_setAssociatedObject(self, &MapViewZoomKeys.minZoomLevel, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
     var maxZoomLevel: Double {
         set(_maxZoomLevel) {
-            Holder._maxZoomLevel = _maxZoomLevel
-            if Holder._zoomLevel > _maxZoomLevel {
+            storedMaxZoomLevel = _maxZoomLevel
+            if storedZoomLevel > _maxZoomLevel {
                 if #available(iOS 9.0, *) {
                     self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: _maxZoomLevel, animated: false)
                 } else {
@@ -31,14 +59,14 @@ public extension MKMapView {
             }
         }
         get {
-            return Holder._maxZoomLevel
+            return storedMaxZoomLevel
         }
     }
     
     var minZoomLevel: Double {
         set(_minZoomLevel) {
-            Holder._minZoomLevel = _minZoomLevel
-            if Holder._zoomLevel < _minZoomLevel {
+            storedMinZoomLevel = _minZoomLevel
+            if storedZoomLevel < _minZoomLevel {
                 if #available(iOS 9.0, *) {
                    self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: _minZoomLevel, animated: false)
                 } else {
@@ -47,13 +75,13 @@ public extension MKMapView {
             }
         }
         get {
-           return Holder._minZoomLevel
+           return storedMinZoomLevel
         }
     }
     
     var zoomLevel: Double {
         get {
-            return Holder._zoomLevel
+            return storedZoomLevel
         }
     }
     
@@ -74,25 +102,25 @@ public extension MKMapView {
             
             zoomLevel = Utils.roundToTwoDecimalPlaces(number: zoomLevel)
             
-            Holder._zoomLevel = zoomLevel
+            storedZoomLevel = zoomLevel
             
             return zoomLevel
             
         }
         set (newZoomLevel) {
-            Holder._zoomLevel = newZoomLevel
+            storedZoomLevel = newZoomLevel
         }
     }
     
     func setCenterCoordinate(_ positionData: Dictionary<String, Any>, animated: Bool) {
         let targetList :Array<CLLocationDegrees> = positionData["target"] as? Array<CLLocationDegrees> ?? [self.camera.centerCoordinate.latitude, self.camera.centerCoordinate.longitude]
-        let zoom :Double = positionData["zoom"] as? Double ?? Holder._zoomLevel
-        Holder._zoomLevel = zoom
+        let zoom :Double = positionData["zoom"] as? Double ?? storedZoomLevel
+        storedZoomLevel = zoom
         if let pitch :CGFloat = positionData["pitch"] as? CGFloat {
-            Holder._pitch = pitch
+            storedPitch = pitch
         }
         if let heading :CLLocationDirection = positionData["heading"] as? CLLocationDirection {
-            Holder._heading = heading
+            storedHeading = heading
         }
         let centerCoordinate :CLLocationCoordinate2D = CLLocationCoordinate2D(latitude:  targetList[0], longitude: targetList[1])
         if #available(iOS 9.0, *) {
@@ -126,8 +154,8 @@ public extension MKMapView {
         // Setting the pitch/heading doesn't work while animating yet.
         // The animation will stop if the you change camera properties while it's running.
         if (!animated) {
-            self.camera.pitch = Holder._pitch
-            self.camera.heading = Holder._heading
+            self.camera.pitch = storedPitch
+            self.camera.heading = storedHeading
         }
     }
     
@@ -168,7 +196,7 @@ public extension MKMapView {
         // clamp large numbers to 28
         let zoomL = min(zoomLevel, 28);
         let altitude = getCameraAltitude(centerCoordinate: centerCoordinate, zoomLevel: zoomL)
-        self.setCamera(MKMapCamera(lookingAtCenter: centerCoordinate, fromDistance: CLLocationDistance(altitude), pitch: Holder._pitch, heading: Holder._heading), animated: animated)
+        self.setCamera(MKMapCamera(lookingAtCenter: centerCoordinate, fromDistance: CLLocationDistance(altitude), pitch: storedPitch, heading: storedHeading), animated: animated)
     }
     
     private func getCameraAltitude(centerCoordinate: CLLocationCoordinate2D, zoomLevel: Double) -> Double {
@@ -194,101 +222,87 @@ public extension MKMapView {
     
     func getVisibleRegion() -> Dictionary<String, Array<Double>> {
         if self.bounds.size != CGSize.zero {
-            // convert center coordiate to pixel space
-            let centerPixelX = Utils.longitudeToPixelSpaceX(longitude: self.centerCoordinate.longitude)
-            let centerPixelY = Utils.latitudeToPixelSpaceY(latitude: self.centerCoordinate.latitude)
-
-            // determine the scale value from the zoom level
-            let zoomExponent = Double(21 - Holder._zoomLevel)
-            let zoomScale = pow(2.0, zoomExponent)
-
-            // scale the map’s size in pixel space
-            let mapSizeInPixels = self.bounds.size
-            let scaledMapWidth = Double(mapSizeInPixels.width) * zoomScale
-            let scaledMapHeight = Double(mapSizeInPixels.height) * zoomScale;
-
-            // figure out the position of the top-left pixel
-            let topLeftPixelX = centerPixelX - (scaledMapWidth / 2);
-            let topLeftPixelY = centerPixelY - (scaledMapHeight / 2);
+            let center = self.region.center
+            let span = self.region.span
 
             // find the southwest coordinate
-            let minLng = Utils.pixelSpaceXToLongitude(pixelX: topLeftPixelX)
-            let minLat = Utils.pixelSpaceYToLatitude(pixelY: topLeftPixelY)
+            let minLng = center.longitude - span.longitudeDelta / 2
+            let minLat = center.latitude - span.latitudeDelta / 2
 
             // find the northeast coordinate
-            let maxLng = Utils.pixelSpaceXToLongitude(pixelX: topLeftPixelX + scaledMapWidth)
-            let maxLat = Utils.pixelSpaceYToLatitude(pixelY: topLeftPixelY + scaledMapHeight)
+            let maxLng = center.longitude + span.longitudeDelta / 2
+            let maxLat = center.latitude + span.latitudeDelta / 2
 
-            return ["northeast": [minLat, maxLng], "southwest": [maxLat, minLng]]
+            return ["northeast": [maxLat, maxLng], "southwest": [minLat, minLng]]
         }
         return ["northeast": [0.0, 0.0], "southwest": [0.0, 0.0]]
     }
     
     func zoomIn(animated: Bool) {
-        if Holder._zoomLevel - 1 <= Holder._maxZoomLevel {
-            if Holder._zoomLevel < 2 {
-                Holder._zoomLevel = 2
+        if storedZoomLevel - 1 <= storedMaxZoomLevel {
+            if storedZoomLevel < 2 {
+                storedZoomLevel = 2
             }
-            Holder._zoomLevel += 1
+            storedZoomLevel += 1
             if #available(iOS 9.0, *) {
-                self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+                self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
             } else {
-                self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+                self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
             }
         }
     }
     
     func zoomOut(animated: Bool) {
-        if Holder._zoomLevel - 1 >= Holder._minZoomLevel {
-            Holder._zoomLevel -= 1
-            if round(Holder._zoomLevel) <= 2 {
-               Holder._zoomLevel = 0
+        if storedZoomLevel - 1 >= storedMinZoomLevel {
+            storedZoomLevel -= 1
+            if round(storedZoomLevel) <= 2 {
+               storedZoomLevel = 0
             }
 
             if #available(iOS 9.0, *) {
-               self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+               self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
             } else {
-               self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+               self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
             }
         }
     }
     
     func zoomTo(newZoomLevel: Double, animated: Bool) {
-        if newZoomLevel < Holder._minZoomLevel {
-            Holder._zoomLevel = Holder._minZoomLevel
-        } else if newZoomLevel > Holder._maxZoomLevel {
-            Holder._zoomLevel = Holder._maxZoomLevel
+        if newZoomLevel < storedMinZoomLevel {
+            storedZoomLevel = storedMinZoomLevel
+        } else if newZoomLevel > storedMaxZoomLevel {
+            storedZoomLevel = storedMaxZoomLevel
         } else {
-            Holder._zoomLevel = newZoomLevel
+            storedZoomLevel = newZoomLevel
         }
 
         if #available(iOS 9.0, *) {
-            self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+            self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
         } else {
-            self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+            self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
         }
     }
     
     func zoomBy(zoomBy: Double, animated: Bool) {
-        if Holder._zoomLevel + zoomBy < Holder._minZoomLevel {
-            Holder._zoomLevel = Holder._minZoomLevel
-        } else if Holder._zoomLevel + zoomBy > Holder._maxZoomLevel {
-            Holder._zoomLevel = Holder._maxZoomLevel
+        if storedZoomLevel + zoomBy < storedMinZoomLevel {
+            storedZoomLevel = storedMinZoomLevel
+        } else if storedZoomLevel + zoomBy > storedMaxZoomLevel {
+            storedZoomLevel = storedMaxZoomLevel
         } else {
-            Holder._zoomLevel = Holder._zoomLevel + zoomBy
+            storedZoomLevel = storedZoomLevel + zoomBy
         }
         
         if #available(iOS 9.0, *) {
-            self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+            self.setCenterCoordinateWithAltitude(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
         } else {
-            self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: Holder._zoomLevel, animated: animated)
+            self.setCenterCoordinateRegion(centerCoordinate: centerCoordinate, zoomLevel: storedZoomLevel, animated: animated)
         }
     }
     
     func updateStoredCameraValues(newZoomLevel: Double, newPitch: CGFloat, newHeading: CLLocationDirection) {
-        Holder._zoomLevel = newZoomLevel
-        Holder._pitch = newPitch
-        Holder._heading = newHeading
+        storedZoomLevel = newZoomLevel
+        storedPitch = newPitch
+        storedHeading = newHeading
     }
 }
 

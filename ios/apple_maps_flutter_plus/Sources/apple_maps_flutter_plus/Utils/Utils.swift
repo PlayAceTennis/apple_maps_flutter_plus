@@ -14,6 +14,19 @@ enum MapViewConstants: Double {
 }
 
 class  Utils {
+    static func coordinatesEqual(_ lhs: [CLLocationCoordinate2D]?, _ rhs: [CLLocationCoordinate2D]?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (left?, right?):
+            return left.count == right.count && zip(left, right).allSatisfy {
+                $0.latitude == $1.latitude && $0.longitude == $1.longitude
+            }
+        default:
+            return false
+        }
+    }
+
     static func longitudeToPixelSpaceX(longitude: Double) -> Double {
         return round(MapViewConstants.MERCATOR_OFFSET.rawValue + MapViewConstants.MERCATOR_RADIUS.rawValue * longitude * .pi / 180.0)
     }

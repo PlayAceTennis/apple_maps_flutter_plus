@@ -23,6 +23,8 @@ class AppleMap extends StatefulWidget {
     this.compassEnabled = true,
     this.trafficEnabled = false,
     this.mapType = MapType.standard,
+    this.colorScheme = MapColorScheme.system,
+    this.showPointsOfInterest = true,
     this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
     this.trackingMode = TrackingMode.none,
     this.rotateGesturesEnabled = true,
@@ -58,6 +60,12 @@ class AppleMap extends StatefulWidget {
 
   /// Type of map tiles to be rendered.
   final MapType mapType;
+
+  /// Color scheme for the map. `system` follows the iOS system appearance.
+  final MapColorScheme colorScheme;
+
+  /// Whether points of interest are displayed on the map.
+  final bool showPointsOfInterest;
 
   /// The mode used to track the user location.
   final TrackingMode trackingMode;
@@ -332,6 +340,8 @@ class _AppleMapOptions {
     this.compassEnabled,
     this.trafficEnabled,
     this.mapType,
+    this.colorScheme,
+    this.showPointsOfInterest,
     this.minMaxZoomPreference,
     this.rotateGesturesEnabled,
     this.scrollGesturesEnabled,
@@ -349,6 +359,8 @@ class _AppleMapOptions {
       compassEnabled: map.compassEnabled,
       trafficEnabled: map.trafficEnabled,
       mapType: map.mapType,
+      colorScheme: map.colorScheme,
+      showPointsOfInterest: map.showPointsOfInterest,
       minMaxZoomPreference: map.minMaxZoomPreference,
       rotateGesturesEnabled: map.rotateGesturesEnabled,
       scrollGesturesEnabled: map.scrollGesturesEnabled,
@@ -367,6 +379,10 @@ class _AppleMapOptions {
   final bool? trafficEnabled;
 
   final MapType? mapType;
+
+  final MapColorScheme? colorScheme;
+
+  final bool? showPointsOfInterest;
 
   final MinMaxZoomPreference? minMaxZoomPreference;
 
@@ -400,6 +416,8 @@ class _AppleMapOptions {
     addIfNonNull('compassEnabled', compassEnabled);
     addIfNonNull('trafficEnabled', trafficEnabled);
     addIfNonNull('mapType', mapType?.index);
+    addIfNonNull('colorScheme', colorScheme?.index);
+    addIfNonNull('showPointsOfInterest', showPointsOfInterest);
     addIfNonNull('minMaxZoomPreference', minMaxZoomPreference?._toJson());
     addIfNonNull('rotateGesturesEnabled', rotateGesturesEnabled);
     addIfNonNull('scrollGesturesEnabled', scrollGesturesEnabled);

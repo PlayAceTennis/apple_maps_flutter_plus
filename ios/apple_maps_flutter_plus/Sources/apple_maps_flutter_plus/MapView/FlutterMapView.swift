@@ -28,6 +28,9 @@ class FlutterMapView: MKMapView, UIGestureRecognizerDelegate {
         MKMapType.standard,
         MKMapType.satellite,
         MKMapType.hybrid,
+        MKMapType.satelliteFlyover,
+        MKMapType.hybridFlyover,
+        MKMapType.mutedStandard,
     ]
     
     let userTrackingModes: Array<MKUserTrackingMode> = [
@@ -142,8 +145,20 @@ class FlutterMapView: MKMapView, UIGestureRecognizerDelegate {
             self.layoutMargins = margins
         }
         
-        if let mapType: Int = options["mapType"] as? Int {
+        if let mapType: Int = options["mapType"] as? Int, mapType >= 0 && mapType < self.mapTypes.count {
             self.mapType = self.mapTypes[mapType]
+        }
+
+        if let colorScheme: Int = options["colorScheme"] as? Int {
+            if #available(iOS 13.0, *) {
+                self.overrideUserInterfaceStyle = UIUserInterfaceStyle(rawValue: colorScheme) ?? .unspecified
+            }
+        }
+
+        if let showPointsOfInterest: Bool = options["showPointsOfInterest"] as? Bool {
+            if #available(iOS 13.0, *) {
+                self.pointOfInterestFilter = showPointsOfInterest ? .includingAll : .excludingAll
+            }
         }
         
         if let trafficEnabled: Bool = options["trafficEnabled"] as? Bool {
@@ -217,9 +232,6 @@ class FlutterMapView: MKMapView, UIGestureRecognizerDelegate {
             fallthrough
         case .authorizedWhenInUse:
             locationManager.requestWhenInUseAuthorization()
-            locationManager.desiredAccuracy = kCLLocationAccuracyBest
-            locationManager.distanceFilter = kCLDistanceFilterNone
-            locationManager.startUpdatingLocation()
             self.showsUserLocation = true
             break
             
