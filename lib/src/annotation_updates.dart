@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of apple_maps_flutter;
+part of '../apple_maps_flutter.dart';
 
 /// [Annotation] update events to be applied to the [AppleMap].
 ///
@@ -10,13 +10,9 @@ part of apple_maps_flutter;
 class _AnnotationUpdates {
   /// Computes [_AnnotationUpdates] given previous and current [Annotation]s.
   _AnnotationUpdates.from(Set<Annotation>? previous, Set<Annotation>? current) {
-    if (previous == null) {
-      previous = Set<Annotation>.identity();
-    }
+    previous ??= Set<Annotation>.identity();
 
-    if (current == null) {
-      current = Set<Annotation>.identity();
-    }
+    current ??= Set<Annotation>.identity();
 
     final Map<AnnotationId, Annotation> previousAnnotations =
         _keyByAnnotationId(previous);
@@ -32,10 +28,9 @@ class _AnnotationUpdates {
       return currentAnnotations[id]!;
     }
 
-    final Set<AnnotationId> _annotationIdsToRemove =
-        prevAnnotationIds.difference(currentAnnotationIds);
+    annotationIdsToRemove = prevAnnotationIds.difference(currentAnnotationIds);
 
-    final Set<Annotation> _annotationsToAdd = currentAnnotationIds
+    annotationsToAdd = currentAnnotationIds
         .difference(prevAnnotationIds)
         .map(idToCurrentAnnotation)
         .toSet();
@@ -43,16 +38,12 @@ class _AnnotationUpdates {
     // Only include annotations whose content actually changed. Otherwise every
     // annotation present in both sets would be re-serialized across the
     // platform channel on every diff.
-    final Set<Annotation> _annotationsToChange = currentAnnotationIds
+    annotationsToChange = currentAnnotationIds
         .intersection(prevAnnotationIds)
         .map(idToCurrentAnnotation)
         .where((Annotation current) =>
             current != previousAnnotations[current.annotationId])
         .toSet();
-
-    annotationsToAdd = _annotationsToAdd;
-    annotationIdsToRemove = _annotationIdsToRemove;
-    annotationsToChange = _annotationsToChange;
   }
 
   late Set<Annotation> annotationsToAdd;

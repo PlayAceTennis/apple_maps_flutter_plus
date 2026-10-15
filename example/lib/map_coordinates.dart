@@ -4,7 +4,6 @@
 
 import 'package:apple_maps_flutter_plus/apple_maps_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import 'page.dart';
 
@@ -14,7 +13,8 @@ const CameraPosition _kInitialPosition = CameraPosition(
 );
 
 class MapCoordinatesPage extends ExamplePage {
-  MapCoordinatesPage() : super(const Icon(Icons.map), 'Map coordinates');
+  const MapCoordinatesPage({super.key})
+      : super(const Icon(Icons.map), 'Map coordinates');
 
   @override
   Widget build(BuildContext context) {

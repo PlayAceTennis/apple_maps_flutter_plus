@@ -8,12 +8,12 @@ import 'package:apple_maps_flutter_plus/apple_maps_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import 'page.dart';
 
 class ScrollingMapPage extends ExamplePage {
-  ScrollingMapPage() : super(const Icon(Icons.map), 'Scrolling map');
+  const ScrollingMapPage({super.key})
+      : super(const Icon(Icons.map), 'Scrolling map');
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class ScrollingMapPage extends ExamplePage {
 }
 
 class ScrollingMapBody extends StatelessWidget {
-  const ScrollingMapBody();
+  const ScrollingMapBody({super.key});
 
   final LatLng center = const LatLng(32.080664, 34.9563837);
 
@@ -48,12 +48,12 @@ class ScrollingMapBody extends StatelessWidget {
                         target: center,
                         zoom: 11.0,
                       ),
-                      gestureRecognizers:
-                          <Factory<OneSequenceGestureRecognizer>>[
+                      gestureRecognizers: <Factory<
+                          OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
                           () => EagerGestureRecognizer(),
                         ),
-                      ].toSet(),
+                      },
                     ),
                   ),
                 ],
@@ -79,27 +79,25 @@ class ScrollingMapBody extends StatelessWidget {
                           target: center,
                           zoom: 11.0,
                         ),
-                        annotations: Set<Annotation>.of(
-                          <Annotation>[
-                            Annotation(
-                              annotationId: AnnotationId("test_Annotation_id"),
-                              position: LatLng(
-                                center.latitude,
-                                center.longitude,
-                              ),
-                              infoWindow: const InfoWindow(
-                                title: 'An interesting location',
-                                snippet: '*',
-                              ),
-                            )
-                          ],
-                        ),
-                        gestureRecognizers:
-                            <Factory<OneSequenceGestureRecognizer>>[
+                        annotations: <Annotation>{
+                          Annotation(
+                            annotationId: AnnotationId("test_Annotation_id"),
+                            position: LatLng(
+                              center.latitude,
+                              center.longitude,
+                            ),
+                            infoWindow: const InfoWindow(
+                              title: 'An interesting location',
+                              snippet: '*',
+                            ),
+                          )
+                        },
+                        gestureRecognizers: <Factory<
+                            OneSequenceGestureRecognizer>>{
                           Factory<OneSequenceGestureRecognizer>(
                             () => ScaleGestureRecognizer(),
                           ),
-                        ].toSet(),
+                        },
                         insetsLayoutMarginsFromSafeArea: false,
                       ),
                     ),

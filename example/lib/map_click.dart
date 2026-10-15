@@ -4,7 +4,6 @@
 
 import 'package:apple_maps_flutter_plus/apple_maps_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 import 'page.dart';
 
@@ -14,7 +13,7 @@ const CameraPosition _kInitialPosition = CameraPosition(
 );
 
 class MapClickPage extends ExamplePage {
-  MapClickPage() : super(const Icon(Icons.mouse), 'Map click');
+  const MapClickPage({super.key}) : super(const Icon(Icons.mouse), 'Map click');
 
   @override
   Widget build(BuildContext context) {

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of apple_maps_flutter;
+part of '../apple_maps_flutter.dart';
 
 /// [Polyline] update events to be applied to the [AppleMap].
 ///
@@ -10,13 +10,9 @@ part of apple_maps_flutter;
 class _PolylineUpdates {
   /// Computes [_PolylineUpdates] given previous and current [Polyline]s.
   _PolylineUpdates.from(Set<Polyline>? previous, Set<Polyline>? current) {
-    if (previous == null) {
-      previous = Set<Polyline>.identity();
-    }
+    previous ??= Set<Polyline>.identity();
 
-    if (current == null) {
-      current = Set<Polyline>.identity();
-    }
+    current ??= Set<Polyline>.identity();
 
     final Map<PolylineId, Polyline> previousPolylines =
         _keyByPolylineId(previous);
@@ -30,22 +26,17 @@ class _PolylineUpdates {
       return currentPolylines[id]!;
     }
 
-    final Set<PolylineId> _polylineIdsToRemove =
-        prevPolylineIds.difference(currentPolylineIds);
+    polylineIdsToRemove = prevPolylineIds.difference(currentPolylineIds);
 
-    final Set<Polyline> _polylinesToAdd = currentPolylineIds
+    polylinesToAdd = currentPolylineIds
         .difference(prevPolylineIds)
         .map(idToCurrentPolyline)
         .toSet();
 
-    final Set<Polyline> _polylinesToChange = currentPolylineIds
+    polylinesToChange = currentPolylineIds
         .intersection(prevPolylineIds)
         .map(idToCurrentPolyline)
         .toSet();
-
-    polylinesToAdd = _polylinesToAdd;
-    polylineIdsToRemove = _polylineIdsToRemove;
-    polylinesToChange = _polylinesToChange;
   }
 
   late Set<Polyline> polylinesToAdd;

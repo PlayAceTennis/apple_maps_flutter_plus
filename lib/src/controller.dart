@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of apple_maps_flutter;
+part of '../apple_maps_flutter.dart';
 
 /// Controller for a single AppleMap instance running on the host platform.
 class AppleMapController {
@@ -17,6 +17,7 @@ class AppleMapController {
   static Future<AppleMapController> init(
     int id,
     CameraPosition initialCameraPosition,
+    // ignore: library_private_types_in_public_api
     _AppleMapState appleMapState,
   ) async {
     final MethodChannel channel =
@@ -242,8 +243,8 @@ class AppleMapController {
   /// The screen location is in screen pixels (not display pixels) with respect
   /// to the top left corner of the map, not necessarily of the whole screen.
   Future<LatLng?> getLatLng(Offset screenPoint) async {
-    final List<dynamic>? latLng =
-        await channel.invokeMethod<List<dynamic>>('map#getLatLng', <String, dynamic>{
+    final List<dynamic>? latLng = await channel
+        .invokeMethod<List<dynamic>>('map#getLatLng', <String, dynamic>{
       'x': screenPoint.dx,
       'y': screenPoint.dy,
     });

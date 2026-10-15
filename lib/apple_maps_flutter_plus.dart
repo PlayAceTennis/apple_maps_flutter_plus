@@ -1,3 +1,3 @@
-library apple_maps_flutter_plus;
+library;
 
 export 'apple_maps_flutter.dart';

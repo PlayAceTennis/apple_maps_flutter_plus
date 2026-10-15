@@ -41,8 +41,9 @@ void main() {
       FakePlatformViewsController();
 
   setUpAll(() {
-    SystemChannels.platform_views.setMockMethodCallHandler(
-        fakePlatformViewsController.fakePlatformViewsMethodHandler);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform_views,
+            fakePlatformViewsController.fakePlatformViewsMethodHandler);
   });
 
   setUp(() {
@@ -230,7 +231,8 @@ void main() {
     skip: true,
   );
 
-  testWidgets("Unchanged annotations are not re-sent", (WidgetTester tester) async {
+  testWidgets("Unchanged annotations are not re-sent",
+      (WidgetTester tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     final Set<Annotation> prev = _toSet(
       m1: Annotation(annotationId: AnnotationId("annotation_1")),

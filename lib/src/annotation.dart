@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of apple_maps_flutter;
+part of '../apple_maps_flutter.dart';
 
 dynamic _offsetToJson(Offset? offset) {
   if (offset == null) {
@@ -102,7 +102,7 @@ class InfoWindow {
 /// This does not have to be globally unique, only unique among the list.
 @immutable
 class AnnotationId {
-  AnnotationId(this.value);
+  const AnnotationId(this.value);
 
   /// value of the [AnnotationId].
   final String value;
@@ -236,8 +236,7 @@ class Annotation {
       visible: visibleParam ?? visible,
       zIndex: zIndexParam ?? zIndex,
       onDragEnd: onDragEndParam ?? onDragEnd,
-      clusteringIdentifier:
-          clusteringIdentifierParam ?? clusteringIdentifier,
+      clusteringIdentifier: clusteringIdentifierParam ?? clusteringIdentifier,
     );
   }
 

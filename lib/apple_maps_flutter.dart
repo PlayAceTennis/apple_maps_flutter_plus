@@ -2,16 +2,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-library apple_maps_flutter;
+library;
 
+// NOTE: these imports are consumed by the `part` files below. The
+// `unnecessary_import` lint cannot see part usage, hence the ignore.
+// ignore: unnecessary_import
 import 'dart:async';
+// ignore: unnecessary_import
 import 'dart:typed_data';
+// ignore: unnecessary_import
 import 'dart:ui';
 
+// ignore: unnecessary_import
 import 'package:flutter/foundation.dart';
+// ignore: unnecessary_import
 import 'package:flutter/gestures.dart';
+// ignore: unnecessary_import
 import 'package:flutter/material.dart';
+// ignore: unnecessary_import
 import 'package:flutter/rendering.dart';
+// ignore: unnecessary_import
 import 'package:flutter/services.dart';
 
 part 'src/annotation.dart';

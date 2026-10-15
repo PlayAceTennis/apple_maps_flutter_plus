@@ -4,8 +4,6 @@
 
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
-import 'dart:ui';
 import 'dart:ui' as ui;
 
 import 'package:apple_maps_flutter_plus/apple_maps_flutter.dart';
@@ -15,7 +13,8 @@ import 'package:flutter/services.dart';
 import 'page.dart';
 
 class PlaceAnnotationPage extends ExamplePage {
-  PlaceAnnotationPage() : super(const Icon(Icons.place), 'Place annotation');
+  const PlaceAnnotationPage({super.key})
+      : super(const Icon(Icons.place), 'Place annotation');
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +23,13 @@ class PlaceAnnotationPage extends ExamplePage {
 }
 
 class PlaceAnnotationBody extends StatefulWidget {
-  const PlaceAnnotationBody();
+  const PlaceAnnotationBody({super.key});
 
   @override
   State<StatefulWidget> createState() => PlaceAnnotationBodyState();
 }
 
-typedef Annotation AnnotationUpdateAction(Annotation annotation);
+typedef AnnotationUpdateAction = Annotation Function(Annotation annotation);
 
 class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
   PlaceAnnotationBodyState();
@@ -43,7 +42,7 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
   int _annotationIdCounter = 1;
   BitmapDescriptor? _annotationIcon;
   late BitmapDescriptor _iconFromBytes;
-  double _devicePixelRatio = 3.0;
+  final double _devicePixelRatio = 3.0;
 
   void _onMapCreated(AppleMapController controller) {
     this.controller = controller;
@@ -58,7 +57,7 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
     final Annotation? tappedAnnotation = annotations[annotationId];
     if (tappedAnnotation != null) {
       setState(() {
-        if (annotations.containsKey(tappedAnnotation)) {
+        if (annotations.containsKey(annotationId)) {
           final Annotation resetOld =
               annotations[selectedAnnotationId]!.copyWith();
           annotations[selectedAnnotationId] = resetOld;
@@ -79,7 +78,7 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
     _annotationIdCounter++;
     final AnnotationId annotationId = AnnotationId(annotationIdVal);
 
-    var bitMapDescriptor;
+    late BitmapDescriptor bitMapDescriptor;
 
     switch (iconType) {
       case 'marker':
@@ -93,11 +92,11 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
         break;
       case 'markerAnnotationWithHue':
         bitMapDescriptor = BitmapDescriptor.markerAnnotationWithHue(
-            new Random().nextDouble() * 360);
+            Random().nextDouble() * 360);
         break;
       case 'defaultAnnotationWithColor':
         bitMapDescriptor = BitmapDescriptor.defaultAnnotationWithHue(
-            new Random().nextDouble() * 360);
+            Random().nextDouble() * 360);
         break;
     }
 
@@ -113,7 +112,7 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
           title: annotationIdVal,
           anchor: Offset(0.5, 0.0),
           snippet: '*',
-          onTap: () => print('InfoWindow with id: $annotationId tapped.')),
+          onTap: () => debugPrint('InfoWindow with id: $annotationId tapped.')),
       onTap: () {
         _onAnnotationTapped(annotationId);
       },
@@ -209,21 +208,19 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
 
   Future<void> _showInfoWindow() async {
     final Annotation annotation = annotations[selectedAnnotationId]!;
-    await this.controller.showMarkerInfoWindow(annotation.annotationId);
+    await controller.showMarkerInfoWindow(annotation.annotationId);
   }
 
   Future<void> _hideInfoWindow() async {
     final Annotation annotation = annotations[selectedAnnotationId]!;
-    this.controller.hideMarkerInfoWindow(annotation.annotationId);
+    controller.hideMarkerInfoWindow(annotation.annotationId);
   }
 
   Future<bool> _isInfoWindowShown() async {
     final Annotation annotation = annotations[selectedAnnotationId]!;
-    print(
-        'Is InfowWindow visible: ${await this.controller.isMarkerInfoWindowShown(annotation.annotationId)}');
-    return (await this
-        .controller
-        .isMarkerInfoWindowShown(annotation.annotationId))!;
+    debugPrint(
+        'Is InfowWindow visible: ${await controller.isMarkerInfoWindowShown(annotation.annotationId)}');
+    return (await controller.isMarkerInfoWindowShown(annotation.annotationId))!;
   }
 
   Future<void> _getBytesFromAsset(String path, int width) async {
@@ -294,40 +291,40 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
                   onPressed: () => _add('customAnnotationFromBytes'),
                 ),
                 TextButton(
-                  child: const Text('remove'),
                   onPressed: _remove,
+                  child: const Text('remove'),
                 ),
                 TextButton(
-                  child: const Text('change info'),
                   onPressed: _changeInfo,
+                  child: const Text('change info'),
                 ),
                 TextButton(
-                  child: const Text('infoWindow is shown?s'),
                   onPressed: _isInfoWindowShown,
+                  child: const Text('infoWindow is shown?s'),
                 ),
                 TextButton(
-                  child: const Text('change alpha'),
                   onPressed: _changeAlpha,
+                  child: const Text('change alpha'),
                 ),
                 TextButton(
-                  child: const Text('toggle draggable'),
                   onPressed: _toggleDraggable,
+                  child: const Text('toggle draggable'),
                 ),
                 TextButton(
-                  child: const Text('change position'),
                   onPressed: _changePosition,
+                  child: const Text('change position'),
                 ),
                 TextButton(
-                  child: const Text('toggle visible'),
                   onPressed: _toggleVisible,
+                  child: const Text('toggle visible'),
                 ),
                 TextButton(
-                  child: const Text('show infoWindow'),
                   onPressed: _showInfoWindow,
+                  child: const Text('show infoWindow'),
                 ),
                 TextButton(
-                  child: const Text('hide infoWindow'),
                   onPressed: _hideInfoWindow,
+                  child: const Text('hide infoWindow'),
                 ),
                 TextButton(
                   child: const Text('change zIndex'),
@@ -336,7 +333,7 @@ class PlaceAnnotationBodyState extends State<PlaceAnnotationBody> {
                 TextButton(
                   child: Text('Take a snapshot'),
                   onPressed: () async {
-                    final imageBytes = await this.controller.takeSnapshot();
+                    final imageBytes = await controller.takeSnapshot();
                     setState(() {
                       _imageBytes = imageBytes;
                     });

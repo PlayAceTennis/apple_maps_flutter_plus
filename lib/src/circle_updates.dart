@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of apple_maps_flutter;
+part of '../apple_maps_flutter.dart';
 
 /// [Circle] update events to be applied to the [AppleMap].
 ///
@@ -10,13 +10,9 @@ part of apple_maps_flutter;
 class _CircleUpdates {
   /// Computes [_CircleUpdates] given previous and current [Circle]s.
   _CircleUpdates.from(Set<Circle>? previous, Set<Circle>? current) {
-    if (previous == null) {
-      previous = Set<Circle>.identity();
-    }
+    previous ??= Set<Circle>.identity();
 
-    if (current == null) {
-      current = Set<Circle>.identity();
-    }
+    current ??= Set<Circle>.identity();
 
     final Map<CircleId, Circle> previousCircles = _keyByCircleId(previous);
     final Map<CircleId, Circle> currentCircles = _keyByCircleId(current);
@@ -28,10 +24,9 @@ class _CircleUpdates {
       return currentCircles[id]!;
     }
 
-    final Set<CircleId> _circleIdsToRemove =
-        prevCircleIds.difference(currentCircleIds);
+    circleIdsToRemove = prevCircleIds.difference(currentCircleIds);
 
-    final Set<Circle> _circlesToAdd = currentCircleIds
+    circlesToAdd = currentCircleIds
         .difference(prevCircleIds)
         .map(idToCurrentCircle)
         .toSet();
@@ -43,15 +38,11 @@ class _CircleUpdates {
       return current != previous;
     }
 
-    final Set<Circle> _circlesToChange = currentCircleIds
+    circlesToChange = currentCircleIds
         .intersection(prevCircleIds)
         .map(idToCurrentCircle)
         .where(hasChanged)
         .toSet();
-
-    circlesToAdd = _circlesToAdd;
-    circleIdsToRemove = _circleIdsToRemove;
-    circlesToChange = _circlesToChange;
   }
 
   late Set<Circle> circlesToAdd;

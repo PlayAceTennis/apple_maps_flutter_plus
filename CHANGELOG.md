@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.1
+
+* Zero analyzer issues (`flutter analyze`), clean `dart format`, modernized
+  test bindings. No API changes.
+
 ## 2.1.0
 
 Crash fixes and parity features (thanks to upstream contributors whose PRs
